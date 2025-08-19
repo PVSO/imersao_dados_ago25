@@ -54,6 +54,7 @@ df_filtrado = df[
 # --- Conteúdo Principal ---
 st.title("🎲 Dashboard de Análise de Salários na Área de Dados")
 st.markdown("Explore os dados salariais na área de dados nos últimos anos. Utilize os filtros à esquerda para refinar sua análise.")
+# st.markdown("---")
 
 # --- Métricas Principais (KPIs) ---
 st.subheader("Métricas gerais (Salário anual em USD)")
@@ -146,6 +147,78 @@ with col_graf4:
         st.plotly_chart(grafico_paises, use_container_width=True)
     else:
         st.warning("Nenhum dado para exibir no gráfico de países.")
+
+with st.container():
+    if not df_filtrado.empty:
+        df_ds = df_filtrado[df_filtrado['cargo'] == 'Data Scientist']
+        salario_medio_experiencia_regime = df_ds.groupby(
+            ['ano','nivel_experiencia', 'regime_trabalho']
+            )['salario_dolar'].mean().reset_index()
+        
+        fig = px.bar(
+            salario_medio_experiencia_regime,
+            x='ano',
+            y='salario_dolar',
+            color='nivel_experiencia',
+            labels={
+                'salario_medio': 'Salário Médio',
+                'ano': 'Ano',
+                'nivel_experiencia': 'Nível de Experiência',
+                'regime_trabalho': 'Regime de Trabalho'
+            },
+            facet_col='regime_trabalho',
+            barmode='group',
+            title='Salário Médio(USD) por Nível de Experiência e Regime de Trabalho ao Longo dos Anos'
+        )
+
+        fig.update_layout(
+            yaxis_title='Salário Médio',
+            xaxis_title='Ano'
+        )
+
+        # fig.show()
+        # fig.update_layout(title_x=0.1)
+        st.plotly_chart(fig, use_container_width=True,key='Sálario médio(USD) por nível de experiência por Regime')
+    else:
+        st.warning("Nenhum dado para exibir no gráfico de países.")
+
+with st.container():
+    if not df_filtrado.empty:
+        # df_ds = df_filtrado[df_filtrado['cargo'] == 'Data Scientist']
+        salario_medio_cargo_empresa = df.groupby(
+            ['cargo', 'tamanho_empresa']
+        )['salario_dolar'].mean().reset_index()
+
+        # salario_medio_cargo_empresa
+
+        top10_cargos = (
+            salario_medio_cargo_empresa.sort_values(['tamanho_empresa', 'salario_dolar'], ascending=[True, False])
+            .groupby('tamanho_empresa').head(10)
+        )
+        
+        fig = px.bar(
+            top10_cargos,
+            x='tamanho_empresa',
+            y='salario_dolar',
+            color='cargo',  # barras lado a lado por tamanho de empresa
+            barmode='group',
+            # orientation='h',
+            labels={'salario_dolar': 'Salário Médio', 'cargo': 'Cargo', 'tamanho_empresa': 'Tamanho da Empresa'},
+            title='Top 10 Cargos com Maior Salário Médio por Tamanho de Empresa'
+        )
+
+        fig.update_layout(
+            yaxis_title='Salário Médio',
+            xaxis_title='Ano'
+        )
+
+        # fig.show()
+        # fig.update_layout(title_x=0.1)
+        st.plotly_chart(fig, use_container_width=True, key='Top10 cargos por tamanho de empresa')
+    else:
+        st.warning("Nenhum dado para exibir no gráfico de países.")
+
+st.markdown("---")
 
 # --- Tabela de Dados Detalhados ---
 st.subheader("Dados Detalhados")
